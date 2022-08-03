@@ -1,13 +1,13 @@
 [package]
 edition = "2021"
-name = "async-rtc"
+name = "async-nucleo"
 version = "0.1.0"
 
 [dependencies]
 # embassy = { git = "https://github.com/embassy-rs/embassy.git", rev = "db344c2bda55bd0352a43720788185cc4d3a420e", features = ["defmt", "nightly"] }
 # embassy-nrf = { git = "https://github.com/embassy-rs/embassy.git", rev = "db344c2bda55bd0352a43720788185cc4d3a420e", features = ["defmt", "time-driver-rtc1", "gpiote", "nightly"], optional = true }
 # embassy-stm32 = { git = "https://github.com/embassy-rs/embassy.git", rev = "db344c2bda55bd0352a43720788185cc4d3a420e", features = ["defmt", "time-driver-tim2", "nightly"], optional = true }
-embassy = { version = "0.1.0", path = "../embassy/embassy", features = ["defmt", "defmt-timestamp-uptime", "time-tick-32768hz"] }
+embassy = { version = "0.1.0", path = "../embassy/embassy", features = ["defmt", "defmt-timestamp-uptime", "time-tick-32768hz", "unstable-traits", "nightly"] }
 # git = "https://github.com/embassy-rs/embassy.git"
 embassy-stm32 = { version = "0.1.0", path = "../embassy/embassy-stm32", features = ["nightly", "defmt", "net", "stm32f767zi", "unstable-pac", "time-driver-any", "exti"]  }
 # git = "https://github.com/embassy-rs/embassy/tree/master/embassy-stm32.git"
@@ -29,7 +29,9 @@ rand_core = "0.6.3"
 critical-section = "0.2.3"
 embedded-storage = "0.3.0"
 
+hd44780-driver = { path = "../hd44780-driver", features = ["async"] }
+
 [profile.release]
 codegen-units = 1 # better optimizations
 debug = true
-# lto = true
+lto = true

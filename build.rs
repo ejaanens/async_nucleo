@@ -1,8 +1,8 @@
-//! adapted from https://github.com/stm32-rs/stm32f7xx-hal/blob/master/build.rs
+//! adapted from <https://github.com/stm32-rs/stm32f7xx-hal/blob/master/build.rs>
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::{self};
+use std::io;
 use std::path::PathBuf;
 
 #[derive(Debug)]

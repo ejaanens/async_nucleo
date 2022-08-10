@@ -3,8 +3,8 @@
 #![feature(type_alias_impl_trait)]
 
 use defmt::*;
-use embassy::executor::Spawner;
-use embassy::time::{Duration, Timer};
+use embassy_executor::executor::Spawner;
+use embassy_executor::time::{Duration, Timer};
 
 use embassy_stm32::peripherals::{I2C1, DMA1_CH0, DMA1_CH1};
 use embassy_stm32::{
@@ -19,7 +19,7 @@ use {defmt_rtt as _, panic_probe as _};
 
 use async_nucleo::rtc_lib::*;
 
-#[embassy::main]
+#[embassy_executor::main]
 async fn main(spawner: Spawner, p: Peripherals) {
     info!("Hello World!");
 
@@ -43,7 +43,7 @@ async fn main(spawner: Spawner, p: Peripherals) {
     unwrap!(spawner.spawn(clock(rtc, Duration::from_millis(1000))));
 }
 
-#[embassy::task]
+#[embassy_executor::task]
 async fn blinker(mut led: Output<'static, PB7>, interval: Duration) {
     loop {
         info!("high");
@@ -56,7 +56,7 @@ async fn blinker(mut led: Output<'static, PB7>, interval: Duration) {
     }
 }
 
-#[embassy::task] // with more i2c use mutex
+#[embassy_executor::task] // with more i2c use mutex
 async fn clock(mut rtc: DS3231<I2c<'static, I2C1, DMA1_CH0, DMA1_CH1>>, interval: Duration) {
     loop {
         if let Ok(time) = rtc.read_clock().await {

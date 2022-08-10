@@ -3,8 +3,8 @@
 #![feature(type_alias_impl_trait)]
 
 use defmt::*;
-use embassy::executor::Spawner;
-use embassy::time::{Duration, Timer};
+use embassy_executor::executor::Spawner;
+use embassy_executor::time::{Duration, Timer};
 use embassy_stm32::{
     gpio::{Level, Output, Speed},
     peripherals::PB7,
@@ -12,7 +12,7 @@ use embassy_stm32::{
 };
 use {defmt_rtt as _, panic_probe as _};
 
-#[embassy::main]
+#[embassy_executor::main]
 async fn main(spawner: Spawner, p: Peripherals) {
     info!("Hello World!");
 
@@ -20,7 +20,7 @@ async fn main(spawner: Spawner, p: Peripherals) {
     unwrap!(spawner.spawn(blinker(led, Duration::from_micros(500000-274))));
 }
 
-#[embassy::task]
+#[embassy_executor::task]
 async fn blinker(mut led: Output<'static, PB7>, interval: Duration) {
     loop {
         info!("high");

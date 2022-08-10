@@ -1,7 +1,8 @@
-use defmt::info;
-// use embassy::time::{Duration, Timer};
-use embedded_hal_async::{self, digital::Wait};
+use defmt::{trace, info};
+use embassy_executor::time::{Duration, Timer};
+// use embedded_hal_async::{self, digital::Wait};
 use embedded_hal::digital::v2::OutputPin; // {IoPin, ,}
+use embassy_stm32::{exti::ExtiInput, peripherals::PF9};
 
 // use core::arch::asm;
 
@@ -11,8 +12,34 @@ pub type Result<T> = core::result::Result<T, Error>;
 
 // match
 // カ => 0b1011_0110
+// 。
 
 
+//  ータミαp
+// 。アチムäq
+//  イツメßθ
+//  ウテモε
+// 、エトヤµ Ω
+// ・オナユσ ü
+//  カニヨρ Σ
+//  フキヌラg π
+//  クネリsqx
+//  ケノル-1y
+//  コハレj
+//  サヒロx
+//  シフワ¢
+//  スヘソ
+//  セホ
+//  ソマ ö
+
+// 四
+// 一ニ
+
+// ガギゲグゴ
+// パピプペポ
+
+
+// ￥
 pub struct DataBus<
     RS: OutputPin,
     RW: OutputPin,
@@ -24,7 +51,7 @@ pub struct DataBus<
     D4: OutputPin,
     D5: OutputPin,
     D6: OutputPin,
-    D7: Wait,
+    // D7: Wait,
 > {
     rs: RS,
     rw: RW,
@@ -36,7 +63,7 @@ pub struct DataBus<
     d4: D4,
     d5: D5,
     d6: D6,
-    d7: D7,
+    d7: ExtiInput<'static, PF9>// D7,
 }
 
 impl<
@@ -50,8 +77,8 @@ impl<
     D4: OutputPin, // IoPin<InputPin, _>
     D5: OutputPin, // IoPin<InputPin, _>
     D6: OutputPin, // IoPin<InputPin, _>
-    D7: Wait, // IoPin<InputPin, _>
-    > DataBus<RS, RW, EN, D0, D1, D2, D3, D4, D5, D6, D7>
+    // D7: Wait, // IoPin<InputPin, _>
+    > DataBus<RS, RW, EN, D0, D1, D2, D3, D4, D5, D6> //, D7>
     {
     #[allow(clippy::too_many_arguments)]
     pub const fn new(
@@ -65,7 +92,7 @@ impl<
         d4: D4,
         d5: D5,
         d6: D6,
-        d7: D7
+        d7: ExtiInput<'static, PF9> // D7
     ) -> Self {
         Self {
             rs,
@@ -119,18 +146,18 @@ impl<
         // Wait for Busy Flag off
         self.rw.set_high().map_err(|_| Error)?; // read mode
         self.en.set_high().map_err(|_| Error)?;
-        self.d7.wait_for_low().await.map_err(|_| Error)?; // check busy flag
+        self.d7.wait_for_low().await; //.map_err(|_| Error)?; // check busy flag
         self.en.set_low().map_err(|_| Error)?;
 
         // Write data
         self.rw.set_low().map_err(|_| Error)?;
         self.set_bus_bits(byte).map_err(|_| Error)?;
-        info!("Writing: {:08b}", byte);
+        trace!("Writing: {:08b}", byte);
         self.en.set_high().map_err(|_| Error)?;
-        // Timer::after(Duration::from_millis(2)).await;
-        info!("Done!");
+        Timer::after(Duration::from_millis(2)).await;
+        trace!("Done!");
         self.en.set_low().map_err(|_| Error)?;
-        // Timer::after(Duration::from_millis(2)).await;
+        Timer::after(Duration::from_millis(2)).await;
         Ok(())
     }
 

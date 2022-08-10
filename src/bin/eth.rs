@@ -3,9 +3,9 @@
 #![feature(type_alias_impl_trait)]
 
 use defmt::*;
-use embassy::executor::Spawner;
-use embassy::time::{Duration, Timer};
-use embassy::util::Forever;
+use embassy_executor::executor::Spawner;
+use embassy_executor::time::{Duration, Timer};
+use embassy_util::Forever;
 use embassy_net::tcp::TcpSocket;
 use embassy_net::{Ipv4Address, Stack, StackResources};
 use embassy_stm32::eth::generic_smi::GenericSMI;
@@ -28,7 +28,7 @@ macro_rules! forever {
 
 type Device = Ethernet<'static, ETH, GenericSMI, 4, 4>;
 
-#[embassy::task]
+#[embassy_executor::task]
 async fn net_task(stack: &'static Stack<Device>) -> ! {
     stack.run().await
 }
@@ -39,7 +39,7 @@ fn config() -> Config {
     config
 }
 
-#[embassy::main(config = "config()")]
+#[embassy_executor::main(config = "config()")]
 async fn main(spawner: Spawner, p: Peripherals) -> ! {
     info!("Hello World!");
 

@@ -3,48 +3,61 @@
 #![feature(type_alias_impl_trait)]
 
 use defmt::*;
-use embassy_executor::executor::Spawner;
-use embassy_executor::time::{Duration, Timer};
+use embassy_executor::{
+    executor::Spawner,
+    time::{Duration, Timer},
+};
+use embassy_embedded_hal::shared_bus::asynch::i2c::I2cDevice;
 
-use embassy_stm32::peripherals::{I2C1, DMA1_CH0, DMA1_CH1};
+use embassy_util::{
+    Forever,
+    blocking_mutex::raw::ThreadModeRawMutex,
+    mutex::Mutex,
+};
+
 use embassy_stm32::{
+    peripherals::{DMA1_CH2, DMA1_CH3, I2C2, PB7},
     gpio::{Level, Output, Speed},
-    i2c::I2c,
+    i2c::{self, I2c},
+    interrupt::{self, I2C2_EV},
     time::Hertz,
-    // interrupt,
-    peripherals::PB7,
     Peripherals,
 };
+use chrono::NaiveDate;
 use {defmt_rtt as _, panic_probe as _};
 
 use async_nucleo::rtc_lib::*;
+
+static I2C2_BUS: Forever<Mutex::<ThreadModeRawMutex, I2c<'static, I2C2, DMA1_CH2, DMA1_CH3>>> = Forever::new();
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner, p: Peripherals) {
     info!("Hello World!");
 
-    let irq = p.I2C1.into();
 
-    let i2c = I2c::new(
-        p.I2C1,
-        p.PB8,
-        p.PB9,
+    let irq = interrupt::take!(I2C2_EV);
+
+    let i2c2 = I2c::new(
+        p.I2C2,
+        p.PF1,
+        p.PF0,
         irq,
-        p.DMA1_CH0,
-        p.DMA1_CH1,
+        p.DMA1_CH2,
+        p.DMA1_CH3,
         Hertz::khz(400),
+        i2c::Config::default(),
     );
 
-    let led = Output::new(p.PB7, Level::High, Speed::Low);
+    let i2c2_bus = Mutex::<ThreadModeRawMutex, _>::new(i2c2);
+    let i2c2_bus = I2C2_BUS.put(i2c2_bus);
 
-    let rtc = DS3231::new(i2c);
-
-    unwrap!(spawner.spawn(blinker(led, Duration::from_micros(500000-213))));
-    unwrap!(spawner.spawn(clock(rtc, Duration::from_millis(1000))));
+    unwrap!(spawner.spawn(blinker(p.PB7, Duration::from_micros(500000-213))));
+    unwrap!(spawner.spawn(clock(i2c2_bus, Duration::from_millis(1000))));
 }
 
 #[embassy_executor::task]
-async fn blinker(mut led: Output<'static, PB7>, interval: Duration) {
+async fn blinker(led: PB7, interval: Duration) {
+    let mut led = Output::new(led, Level::High, Speed::Low);
     loop {
         info!("high");
         led.set_high();
@@ -56,13 +69,21 @@ async fn blinker(mut led: Output<'static, PB7>, interval: Duration) {
     }
 }
 
-#[embassy_executor::task] // with more i2c use mutex
-async fn clock(mut rtc: DS3231<I2c<'static, I2C1, DMA1_CH0, DMA1_CH1>>, interval: Duration) {
+#[embassy_executor::task]
+async fn clock(mut i2c2_bus: &mut Mutex<ThreadModeRawMutex, I2c<'static, I2C2, DMA1_CH2, DMA1_CH3>>, interval: Duration) {
+    let i2c2_dev0 = I2cDevice::new(i2c2_bus);
+
+    let rtc = DS3231::new(i2c2_dev0);
+
+    let datetime = NaiveDate::from_ymd(2022, 8, 17).and_hms(20, 20, 20);
+    rtc.set_datetime(&datetime).await.unwrap();
+
     loop {
-        if let Ok(time) = rtc.read_clock().await {
+        if let Ok(time) = rtc.time().await {
 
             info!("clock {:?}", time);
         }
+
         Timer::after(interval).await;
     }
 }

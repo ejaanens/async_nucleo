@@ -1,4 +1,4 @@
-use defmt::{trace, info};
+use defmt::trace;
 use embassy_executor::time::{Duration, Timer};
 // use embedded_hal_async::{self, digital::Wait};
 use embedded_hal::digital::v2::OutputPin; // {IoPin, ,}

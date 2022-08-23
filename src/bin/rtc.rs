@@ -48,11 +48,25 @@ async fn main(spawner: Spawner, p: Peripherals) {
         i2c::Config::default(),
     );
 
-    let i2c2_bus = Mutex::<ThreadModeRawMutex, _>::new(i2c2);
-    let i2c2_bus = I2C2_BUS.put(i2c2_bus);
+    let rtc = DS3231::new(i2c2);
+
+    // let i2c2_bus = Mutex::<ThreadModeRawMutex, _>::new(i2c2);
+    // let i2c2_bus = I2C2_BUS.put(i2c2_bus);
 
     unwrap!(spawner.spawn(blinker(p.PB7, Duration::from_micros(500000-213))));
-    unwrap!(spawner.spawn(clock(i2c2_bus, Duration::from_millis(1000))));
+    // unwrap!(spawner.spawn(clock(i2c2_bus, Duration::from_millis(1000))));
+
+    let datetime = NaiveDate::from_ymd(2022, 8, 17).and_hms(20, 20, 20);
+    rtc.set_datetime(&datetime).await.unwrap();
+
+    loop {
+        if let Ok(time) = rtc.time().await {
+
+            info!("clock {:?}", time);
+        }
+
+        Timer::after(interval).await;
+    }
 }
 
 #[embassy_executor::task]

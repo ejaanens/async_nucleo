@@ -301,7 +301,12 @@ where
     }
 
     pub async fn set_time(&mut self, time: &NaiveTime) -> nb::Result<(), Error<ComErr>> {
-        let buf = [Reg::SEC as u8, time.second(), time.minute(), time.hour()];
+        let buf = [
+            Reg::SEC as u8,
+            time.second() as u8,
+            time.minute() as u8,
+            time.hour() as u8
+        ];
 
         self.i2c.write(ADDR, &buf).await.map_err(Error::I2c)?;
         Ok(())
@@ -320,13 +325,13 @@ where
     }
 
     pub async fn set_year(&mut self, year: u16) -> nb::Result<(), Error<ComErr>> {
-        self.set_bcd_reg(Reg::YEAR, year).await
+        self.set_bcd_reg(Reg::YEAR, year as u8).await
     }
 
     pub async fn set_date(&mut self, date: &NaiveDate) -> nb::Result<(), Error<ComErr>> {
-        let day   = bin_to_bcd(date.day());
-        let month = bin_to_bcd(date.month());
-        let year  = bin_to_bcd(date.year());
+        let day   = bin_to_bcd(date.day() as u8);
+        let month = bin_to_bcd(date.month() as u8);
+        let year  = bin_to_bcd(date.year() as u8);
 
         let buf = [Reg::DATE as u8, day, month, year];
 

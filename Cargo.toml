@@ -33,7 +33,7 @@ critical-section = "0.2.3"
 embedded-storage = "0.3.0"
 
 rtcc = "0.3.0"
-chrono = "*"
+chrono = { version = "*", default-features = false }
 
 # hd44780-driver = { path = "../hd44780-driver", features = ["async"] }
 
